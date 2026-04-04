@@ -1,4 +1,3 @@
-```json
 {
   "name": "vartalap-client",
   "private": true,
@@ -26,4 +25,3 @@
     "node": ">=18"
   }
 }
-```
