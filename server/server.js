@@ -8,7 +8,6 @@ import userRoutes from "./routes/userRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import initSocket from "./socket/socket.js";
-import dotenv from "dotenv";
 
 dotenv.config();
 
