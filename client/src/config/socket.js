@@ -1,8 +1,6 @@
 import { io } from "socket.io-client";
-import dotenv from "dotenv";
-dotenv.config();
 
-const ENDPOINT = process.env.BACKEND_URL
+const ENDPOINT = import.meta.env.BACKEND_URL
 
 let socket = null;
 
