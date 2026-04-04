@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 
-const ENDPOINT = import.meta.env.BACKEND_URL
+const ENDPOINT = import.meta.env.VITE_BACKEND_URL
 
 let socket = null;
 
