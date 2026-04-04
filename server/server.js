@@ -8,6 +8,7 @@ import userRoutes from "./routes/userRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import initSocket from "./socket/socket.js";
+import dotenv from "dotenv";
 
 dotenv.config();
 
@@ -17,14 +18,14 @@ const server = http.createServer(app);
 const io = new Server(server, {
     pingTimeout: 60000,
     cors: {
-        origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+        origin: process.env.FRONTEND_URL,
         credentials: true,
     },
 });
 
 // Middleware
 app.use(cors({
-    origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+    origin: process.env.FRONTEND_URL,
     credentials: true,
 }));
 app.use(express.json());
