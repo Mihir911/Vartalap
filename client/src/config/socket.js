@@ -1,6 +1,8 @@
 import { io } from "socket.io-client";
+import dotenv from "dotenv";
+dotenv.config();
 
-const ENDPOINT = "http://localhost:5000";
+const ENDPOINT = process.env.BACKEND_URL
 
 let socket = null;
 
