@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { HiXMark, HiMagnifyingGlass, HiUserPlus, HiPencil } from "react-icons/hi2";
+import { HiXMark, HiMagnifyingGlass, HiUserPlus, HiPencil, HiCheck, HiUserMinus } from "react-icons/hi2";
 import useChatStore from "../store/useChatStore.js";
 import useAuthStore from "../store/useAuthStore.js";
 import API from "../config/api.js";
@@ -24,7 +24,6 @@ const GroupInfoModal = ({ chat, onClose }) => {
         const timer = setTimeout(async () => {
             try {
                 const { data } = await API.get(`/users?search=${search}`);
-                // Filter out users already in group
                 const filtered = data.filter(
                     (u) => !chat.users.find((cu) => cu._id === u._id)
                 );
@@ -44,7 +43,7 @@ const GroupInfoModal = ({ chat, onClose }) => {
         try {
             await renameGroup(chat._id, newName);
             setEditingName(false);
-            toast.success("Group renamed");
+            toast.success("Group renamed! ✏️");
         } catch (err) {
             toast.error("Failed to rename group");
         }
@@ -55,7 +54,7 @@ const GroupInfoModal = ({ chat, onClose }) => {
             await addToGroup(chat._id, userId);
             setSearch("");
             setResults([]);
-            toast.success("Member added");
+            toast.success("New member added! 👤");
         } catch (err) {
             toast.error("Failed to add member");
         }
@@ -67,9 +66,9 @@ const GroupInfoModal = ({ chat, onClose }) => {
             if (userId === user._id) {
                 setSelectedChat(null);
                 onClose();
-                toast.success("You left the group");
+                toast.success("You left the sanctuary. 🚪");
             } else {
-                toast.success("Member removed");
+                toast.success("Member removed. 💨");
             }
         } catch (err) {
             toast.error("Failed to remove member");
@@ -82,146 +81,181 @@ const GroupInfoModal = ({ chat, onClose }) => {
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal animate-scale-in" onClick={(e) => e.stopPropagation()}>
-                <div className="modal-header">
-                    <h3>Group Info</h3>
-                    <button className="modal-close" onClick={onClose}>
+        <>
+            <div className="drawer-overlay" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={onClose}></div>
+            <div className="search-drawer glass-container animate-up" style={{
+                position: 'fixed',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '460px',
+                maxHeight: '80vh',
+                borderRadius: '32px',
+                zIndex: 100,
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+                boxShadow: 'var(--shadow-lg)'
+            }}>
+                <div className="drawer-header" style={{ padding: '24px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-glass)' }}>
+                    <h3 style={{ fontSize: '20px', fontWeight: '800' }}>Group Sanctuary</h3>
+                    <button className="icon-btn" onClick={onClose}>
                         <HiXMark />
                     </button>
                 </div>
 
-                <div className="profile-section">
-                    <div className="profile-avatar-placeholder-large" style={{ fontSize: "32px" }}>
-                        G
-                    </div>
-                    {editingName ? (
-                        <div style={{ display: "flex", gap: "8px", justifyContent: "center", marginTop: "8px" }}>
-                            <input
-                                type="text"
-                                className="form-input"
-                                style={{ width: "200px", padding: "8px 12px" }}
-                                value={newName}
-                                onChange={(e) => setNewName(e.target.value)}
-                                autoFocus
-                                onKeyDown={(e) => e.key === "Enter" && handleRename()}
-                            />
-                            <button className="btn-primary" style={{ padding: "8px 16px", fontSize: "13px" }} onClick={handleRename}>
-                                Save
-                            </button>
-                        </div>
-                    ) : (
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: "4px" }}>
-                            <span className="profile-name">{chat.chatName}</span>
-                            {isAdmin && (
-                                <button
-                                    className="icon-btn"
-                                    style={{ width: "28px", height: "28px", fontSize: "14px" }}
-                                    onClick={() => setEditingName(true)}
-                                >
-                                    <HiPencil />
-                                </button>
-                            )}
-                        </div>
-                    )}
-                    <div className="profile-email" style={{ marginTop: "4px" }}>
-                        {chat.users.length} members
-                    </div>
-                </div>
-
-                <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "16px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                        <span style={{ fontWeight: "600", fontSize: "14px" }}>Members</span>
-                        {isAdmin && (
-                            <button
-                                className="icon-btn"
-                                style={{ width: "30px", height: "30px", fontSize: "16px" }}
-                                onClick={() => setShowAddUser(!showAddUser)}
-                            >
-                                <HiUserPlus />
-                            </button>
-                        )}
-                    </div>
-
-                    {showAddUser && (
-                        <div style={{ marginBottom: "12px" }}>
-                            <div className="search-input-wrapper">
-                                <HiMagnifyingGlass className="search-icon" />
-                                <input
-                                    type="text"
-                                    className="search-input"
-                                    placeholder="Search users to add..."
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    autoFocus
-                                />
+                <div className="modal-body" style={{ flex: 1, overflowY: 'auto', padding: '32px' }}>
+                    <div className="profile-section" style={{ textAlign: 'center', marginBottom: '32px' }}>
+                        <div className="avatar" style={{ margin: '0 auto 16px', width: '80px', height: '80px' }}>
+                            <div className="avatar-wrapper" style={{ width: '100%', height: '100%' }}>
+                                <div className="avatar-placeholder" style={{ fontSize: "32px", borderRadius: '24px' }}>
+                                    G
+                                </div>
                             </div>
-                            {results.length > 0 && (
-                                <div style={{ maxHeight: "120px", overflowY: "auto", marginTop: "8px" }}>
-                                    {results.map((u) => (
-                                        <div
-                                            key={u._id}
-                                            className="search-result-item"
-                                            onClick={() => handleAdd(u._id)}
-                                        >
-                                            <div className="avatar-placeholder small">{getInitials(u.name)}</div>
-                                            <div>
-                                                <div className="name">{u.name}</div>
-                                                <div className="email">{u.email}</div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
                         </div>
-                    )}
 
-                    <div className="group-members-list">
-                        {chat.users.map((member) => (
-                            <div key={member._id} className="group-member-item">
-                                {member.avatar ? (
-                                    <img src={member.avatar} alt="" className="avatar-img" style={{ width: "36px", height: "36px" }} />
-                                ) : (
-                                    <div className="avatar-placeholder small">{getInitials(member.name)}</div>
-                                )}
-                                <div className="member-info">
-                                    <span className="member-name">
-                                        {member.name}
-                                        {member._id === user._id && " (You)"}
-                                    </span>
+                        {editingName ? (
+                            <div style={{ display: "flex", gap: "10px", justifyContent: "center", marginTop: "12px" }}>
+                                <div className="search-input-wrapper" style={{ width: '240px', height: '44px' }}>
+                                    <input
+                                        type="text"
+                                        className="search-input"
+                                        style={{ height: '100%', borderRadius: '12px' }}
+                                        value={newName}
+                                        onChange={(e) => setNewName(e.target.value)}
+                                        autoFocus
+                                        onKeyDown={(e) => e.key === "Enter" && handleRename()}
+                                    />
                                 </div>
-                                {chat.groupAdmin?._id === member._id && (
-                                    <span className="admin-badge">Admin</span>
-                                )}
-                                {isAdmin && member._id !== user._id && (
+                                <button className="primary-btn" style={{ padding: "0 16px", borderRadius: '12px' }} onClick={handleRename}>
+                                    <HiCheck />
+                                </button>
+                            </div>
+                        ) : (
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", marginTop: "4px" }}>
+                                <h2 style={{ fontSize: '22px', fontWeight: '800' }}>{chat.chatName}</h2>
+                                {isAdmin && (
                                     <button
-                                        className="remove-member-btn"
-                                        onClick={() => handleRemove(member._id)}
-                                        title="Remove"
+                                        className="icon-btn"
+                                        style={{ width: "32px", height: "32px", fontSize: "16px" }}
+                                        onClick={() => setEditingName(true)}
                                     >
-                                        <HiXMark />
+                                        <HiPencil />
                                     </button>
                                 )}
                             </div>
-                        ))}
+                        )}
+                        <p style={{ color: 'var(--text-dim)', fontSize: '14px', marginTop: '4px' }}>{chat.users.length} spirits in harmony</p>
                     </div>
 
+                    <div className="members-section" style={{ borderTop: "1px solid var(--border-glass)", paddingTop: "24px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                            <span style={{ fontWeight: "700", fontSize: "15px", color: 'var(--text-white)' }}>Members</span>
+                            {isAdmin && (
+                                <button
+                                    className="icon-btn"
+                                    style={{ width: "36px", height: "36px", fontSize: "18px" }}
+                                    onClick={() => setShowAddUser(!showAddUser)}
+                                >
+                                    <HiUserPlus />
+                                </button>
+                            )}
+                        </div>
+
+                        {showAddUser && (
+                            <div className="animate-fade-in" style={{ marginBottom: "20px" }}>
+                                <div className="search-input-wrapper" style={{ height: '48px' }}>
+                                    <HiMagnifyingGlass className="search-icon" />
+                                    <input
+                                        type="text"
+                                        className="search-input"
+                                        placeholder="Invoke new spirits..."
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        autoFocus
+                                    />
+                                </div>
+                                {results.length > 0 && (
+                                    <div style={{ maxHeight: "150px", overflowY: "auto", marginTop: "12px", background: 'rgba(255,255,255,0.03)', borderRadius: '16px', padding: '8px' }}>
+                                        {results.map((u) => (
+                                            <div
+                                                key={u._id}
+                                                className="chat-item"
+                                                onClick={() => handleAdd(u._id)}
+                                                style={{ padding: '8px 12px' }}
+                                            >
+                                                <div className="avatar" style={{ width: '36px', height: '36px', marginRight: '12px' }}>
+                                                    <div className="avatar-wrapper" style={{ width: '100%', height: '100%' }}>
+                                                        <div className="avatar-placeholder" style={{ fontSize: '13px' }}>{getInitials(u.name)}</div>
+                                                    </div>
+                                                </div>
+                                                <div className="chat-info">
+                                                    <div className="chat-name" style={{ fontSize: '14px' }}>{u.name}</div>
+                                                </div>
+                                                <HiUserPlus style={{ marginLeft: 'auto', color: 'var(--primary-glow)' }} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        <div className="group-members-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {chat.users.map((member) => (
+                                <div key={member._id} className="chat-item" style={{ cursor: 'default' }}>
+                                    <div className="avatar" style={{ width: '40px', height: '40px', marginRight: '14px' }}>
+                                        <div className="avatar-wrapper" style={{ width: '100%', height: '100%' }}>
+                                            {member.avatar ? (
+                                                <img src={member.avatar} alt="" className="avatar-img" />
+                                            ) : (
+                                                <div className="avatar-placeholder" style={{ fontSize: '14px' }}>{getInitials(member.name)}</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="chat-info">
+                                        <div className="chat-name" style={{ fontSize: '15px' }}>
+                                            {member.name}
+                                            {member._id === user._id && <span style={{ color: 'var(--text-dim)', fontWeight: '400', fontSize: '13px', marginLeft: '6px' }}>(You)</span>}
+                                        </div>
+                                        {chat.groupAdmin?._id === member._id && (
+                                            <div style={{ fontSize: '11px', color: 'var(--primary-glow)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>Admin</div>
+                                        )}
+                                    </div>
+                                    {isAdmin && member._id !== user._id && (
+                                        <button
+                                            className="icon-btn"
+                                            style={{ width: "32px", height: "32px", fontSize: "16px", background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}
+                                            onClick={() => handleRemove(member._id)}
+                                            title="Banish Member"
+                                        >
+                                            <HiUserMinus />
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="modal-footer" style={{ padding: '24px 32px', background: 'rgba(0,0,0,0.2)' }}>
                     <button
-                        className="btn-primary"
+                        className="primary-btn"
                         style={{
                             width: "100%",
-                            marginTop: "16px",
+                            height: '52px',
+                            justifyContent: 'center',
                             background: "rgba(239, 68, 68, 0.15)",
-                            color: "var(--danger)",
+                            color: "#ef4444",
                             border: "1px solid rgba(239, 68, 68, 0.3)",
+                            borderRadius: '16px'
                         }}
                         onClick={() => handleRemove(user._id)}
                     >
-                        Leave Group
+                        Leave Sanctuary
                     </button>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 

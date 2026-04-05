@@ -90,24 +90,22 @@ const ChatSidebar = ({ className = "", onSelectChat }) => {
 
     return (
         <>
-            <div className={`chat-sidebar ${className}`}>
+            <div className={`chat-sidebar ${className} ${selectedChat && !showSidebarMobile ? "hidden-mobile" : ""}`}>
                 <div className="sidebar-header">
                     <div className="logo">
-                        <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
+                        <svg width="36" height="36" viewBox="0 0 48 48" fill="none">
                             <defs>
-                                <linearGradient id="sidebarLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                                     <stop offset="0%" stopColor="#8b5cf6" />
                                     <stop offset="100%" stopColor="#06b6d4" />
                                 </linearGradient>
                             </defs>
-                            <rect width="48" height="48" rx="14" fill="url(#sidebarLogoGrad)" />
+                            <rect width="48" height="48" rx="14" fill="url(#logoGrad)" />
                             <path
                                 d="M14 16C14 14.8954 14.8954 14 16 14H32C33.1046 14 34 14.8954 34 16V28C34 29.1046 33.1046 30 32 30H22L17 34V30H16C14.8954 30 14 29.1046 14 28V16Z"
                                 fill="white"
-                                fillOpacity="0.9"
+                                fillOpacity="0.95"
                             />
-                            <circle cx="21" cy="22" r="1.5" fill="#8b5cf6" />
-                            <circle cx="27" cy="22" r="1.5" fill="#8b5cf6" />
                         </svg>
                         <h2>Vartalap</h2>
                     </div>
@@ -130,7 +128,7 @@ const ChatSidebar = ({ className = "", onSelectChat }) => {
                         <input
                             type="text"
                             className="search-input"
-                            placeholder="Search conversations..."
+                            placeholder="Search your conversations..."
                             value={filterText}
                             onChange={(e) => setFilterText(e.target.value)}
                         />
@@ -140,7 +138,7 @@ const ChatSidebar = ({ className = "", onSelectChat }) => {
                 <div className="chat-list">
                     {filteredChats.length === 0 ? (
                         <div className="no-chats">
-                            <p>No conversations yet.<br />Start chatting!</p>
+                            <p>No conversations yet.<br />Discover someone new!</p>
                         </div>
                     ) : (
                         filteredChats.map((chat) => {
@@ -152,18 +150,20 @@ const ChatSidebar = ({ className = "", onSelectChat }) => {
                                     onClick={() => handleSelectChat(chat)}
                                 >
                                     <div className="avatar">
-                                        {getChatAvatar(chat) ? (
-                                            <img src={getChatAvatar(chat)} alt="" className="avatar-img" />
-                                        ) : (
-                                            <div className="avatar-placeholder">
-                                                {chat.isGroupChat ? (
-                                                    <HiUserGroup style={{ fontSize: "20px" }} />
-                                                ) : (
-                                                    getInitials(getChatName(chat))
-                                                )}
-                                            </div>
-                                        )}
-                                        {isUserOnline(chat) && <span className="online-badge"></span>}
+                                        <div className="avatar-wrapper">
+                                            {getChatAvatar(chat) ? (
+                                                <img src={getChatAvatar(chat)} alt="" className="avatar-img" />
+                                            ) : (
+                                                <div className="avatar-placeholder">
+                                                    {chat.isGroupChat ? (
+                                                        <HiUserGroup style={{ fontSize: "24px" }} />
+                                                    ) : (
+                                                        getInitials(getChatName(chat))
+                                                    )}
+                                                </div>
+                                            )}
+                                            {isUserOnline(chat) && <span className="online-badge"></span>}
+                                        </div>
                                     </div>
                                     <div className="chat-item-info">
                                         <div className="chat-item-name">
@@ -176,9 +176,9 @@ const ChatSidebar = ({ className = "", onSelectChat }) => {
                                             <span>
                                                 {chat.latestMessage
                                                     ? chat.latestMessage.sender?.name
-                                                        ? `${chat.latestMessage.sender._id === user._id ? "You" : chat.latestMessage.sender.name.split(" ")[0]}: ${chat.latestMessage.content || "📷 Image"}`
-                                                        : chat.latestMessage.content || "📷 Image"
-                                                    : "No messages yet"}
+                                                        ? `${chat.latestMessage.sender._id === user._id ? "You" : chat.latestMessage.sender.name.split(" ")[0]}: ${chat.latestMessage.content || "📷 Attachment"}`
+                                                        : chat.latestMessage.content || "📷 Attachment"
+                                                    : "Say hello! 👋"}
                                             </span>
                                             {notifCount > 0 && (
                                                 <span className="unread-badge">{notifCount}</span>
@@ -193,16 +193,19 @@ const ChatSidebar = ({ className = "", onSelectChat }) => {
 
                 <div className="sidebar-user">
                     <div
-                        style={{ cursor: "pointer" }}
+                        className="avatar"
+                        style={{ cursor: "pointer", width: "42px", height: "42px", marginRight: "0" }}
                         onClick={() => navigate("/profile")}
                     >
-                        {user?.avatar ? (
-                            <img src={user.avatar} alt="" className="avatar-img" style={{ width: "36px", height: "36px" }} />
-                        ) : (
-                            <div className="avatar-placeholder small">
-                                {getInitials(user?.name)}
-                            </div>
-                        )}
+                        <div className="avatar-wrapper" style={{ width: "100%", height: "100%" }}>
+                            {user?.avatar ? (
+                                <img src={user.avatar} alt="" className="avatar-img" />
+                            ) : (
+                                <div className="avatar-placeholder">
+                                    {getInitials(user?.name)}
+                                </div>
+                            )}
+                        </div>
                     </div>
                     <div className="sidebar-user-info" style={{ cursor: "pointer" }} onClick={() => navigate("/profile")}>
                         <div className="name">{user?.name}</div>

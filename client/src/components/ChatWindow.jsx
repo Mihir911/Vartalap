@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { HiPaperAirplane, HiPhoto, HiArrowLeft, HiEllipsisVertical, HiInformationCircle, HiPaperClip, HiXMark } from "react-icons/hi2";
+import { HiPaperAirplane, HiArrowLeft, HiInformationCircle, HiPaperClip, HiXMark, HiPhone, HiVideoCamera, HiUserGroup, HiDocumentText } from "react-icons/hi2";
 import useAuthStore from "../store/useAuthStore.js";
 import useChatStore from "../store/useChatStore.js";
 import { getSocket } from "../config/socket.js";
@@ -28,7 +28,6 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
             fetchMessages(selectedChat._id);
             const socket = getSocket();
             socket.emit("join chat", selectedChat._id);
-            // Reset file states when chat changes
             setSelectedFile(null);
             setFilePreview(null);
         }
@@ -49,18 +48,6 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
         if (selectedChat.isGroupChat) return selectedChat.chatName;
         const otherUser = getOtherUser();
         return otherUser ? otherUser.name : "Unknown";
-    };
-
-    const getStatusText = () => {
-        if (typing) return null; // Will show typing indicator instead
-        if (selectedChat?.isGroupChat) {
-            return `${selectedChat.users.length} members`;
-        }
-        const otherUser = getOtherUser();
-        if (otherUser && onlineUsers.includes(otherUser._id)) {
-            return "Online";
-        }
-        return "Offline";
     };
 
     const handleTyping = (e) => {
@@ -92,7 +79,7 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
                 };
                 reader.readAsDataURL(file);
             } else {
-                setFilePreview(null); // No preview for non-images
+                setFilePreview(null);
             }
         }
     };
@@ -105,7 +92,6 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
 
     const handleSend = async (e) => {
         e?.preventDefault();
-
         if (!newMessage.trim() && !selectedFile) return;
 
         const socket = getSocket();
@@ -128,15 +114,7 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
         } finally {
             setSending(false);
         }
-
         inputRef.current?.focus();
-    };
-
-    const handleKeyDown = (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            handleSend();
-        }
     };
 
     const getInitials = (name) => {
@@ -144,122 +122,106 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
         return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
     };
 
-    // Group messages by date
-    const groupedMessages = [];
-    let lastDate = "";
-    messages.forEach((msg) => {
-        const msgDate = new Date(msg.createdAt).toLocaleDateString();
-        if (msgDate !== lastDate) {
-            groupedMessages.push({ type: "date", date: msgDate, id: `date-${msgDate}` });
-            lastDate = msgDate;
-        }
-        groupedMessages.push({ type: "message", data: msg, id: msg._id });
-    });
+    const isUserOnline = (chat) => {
+        if (!chat || chat.isGroupChat) return false;
+        const otherUser = chat.users.find((u) => u._id !== user._id);
+        return otherUser ? onlineUsers.includes(otherUser._id) : false;
+    };
 
     const otherUser = getOtherUser();
 
     return (
-        <div className="chat-window-container">
-            <div className="chat-header">
+        <div className="chat-main">
+            <header className="chat-header">
                 <div className="chat-header-info">
                     <button className="icon-btn back-btn" onClick={onBack}>
                         <HiArrowLeft />
                     </button>
                     <div className="avatar" style={{ cursor: selectedChat?.isGroupChat ? "pointer" : "default" }} onClick={() => selectedChat?.isGroupChat && setShowGroupInfo(true)}>
-                        {otherUser?.avatar ? (
-                            <img src={otherUser.avatar} alt="" className="avatar-img" style={{ width: "40px", height: "40px" }} />
-                        ) : (
-                            <div className="avatar-placeholder" style={{ width: "40px", height: "40px", fontSize: "15px" }}>
-                                {selectedChat?.isGroupChat ? "G" : getInitials(getChatTitle())}
-                            </div>
-                        )}
-                        {otherUser && onlineUsers.includes(otherUser._id) && (
-                            <span className="online-badge" style={{ borderColor: "var(--bg-secondary)" }}></span>
-                        )}
+                        <div className="avatar-wrapper" style={{ width: "48px", height: "48px" }}>
+                            {otherUser?.avatar ? (
+                                <img src={otherUser.avatar} alt="" className="avatar-img" />
+                            ) : (
+                                <div className="avatar-placeholder">
+                                    {selectedChat?.isGroupChat ? <HiUserGroup style={{ fontSize: "24px" }} /> : getInitials(getChatTitle())}
+                                </div>
+                            )}
+                            {isUserOnline(selectedChat) && <span className="online-badge"></span>}
+                        </div>
                     </div>
                     <div className="chat-header-text">
                         <h3>{getChatTitle()}</h3>
                         {typing ? (
                             <p className="typing-text">typing...</p>
                         ) : (
-                            <p style={{ color: getStatusText() === "Online" ? "var(--success)" : "var(--text-muted)" }}>
-                                {getStatusText()}
-                            </p>
+                            <p>{selectedChat?.isGroupChat ? `${selectedChat.users?.length} members` : isUserOnline(selectedChat) ? "Online" : "Offline"}</p>
                         )}
                     </div>
                 </div>
                 <div className="chat-header-actions">
-                    {selectedChat?.isGroupChat && (
-                        <button className="icon-btn" onClick={() => setShowGroupInfo(true)}>
-                            <HiInformationCircle />
-                        </button>
-                    )}
+                    <button className="icon-btn" title="Phone Call">
+                        <HiPhone />
+                    </button>
+                    <button className="icon-btn" title="Video Call">
+                        <HiVideoCamera />
+                    </button>
+                    <button className="icon-btn" title="Information" onClick={() => selectedChat?.isGroupChat && setShowGroupInfo(true)}>
+                        <HiInformationCircle />
+                    </button>
                 </div>
-            </div>
+            </header>
 
             <div className="messages-container">
                 {loadingMessages ? (
-                    <div className="loading-container">
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                         <div className="spinner"></div>
                     </div>
                 ) : (
                     <>
-                        {groupedMessages.map((item) => {
-                            if (item.type === "date") {
-                                return (
-                                    <div key={item.id} className="date-separator">
-                                        <span>{item.date === new Date().toLocaleDateString() ? "Today" : item.date}</span>
-                                    </div>
-                                );
-                            }
-                            return (
-                                <MessageBubble
-                                    key={item.id}
-                                    message={item.data}
-                                    isOwn={item.data.sender._id === user._id || item.data.sender === user._id}
-                                    showSender={selectedChat?.isGroupChat}
-                                />
-                            );
-                        })}
-
+                        {messages.map((m, index) => (
+                            <MessageBubble
+                                key={m._id}
+                                message={m}
+                                isSent={m.sender._id === user._id || m.sender === user._id}
+                                isLastMessage={index === messages.length - 1}
+                            />
+                        ))}
                         {typing && (
-                            <div className="message-wrapper received animate-fade-in">
-                                <div className="typing-indicator">
+                            <div className="message-wrapper received" style={{ padding: "10px 0" }}>
+                                <div className="typing-indicator" style={{ background: "rgba(255,255,255,0.05)", padding: "12px 20px", borderRadius: "18px" }}>
                                     <span className="typing-dot"></span>
                                     <span className="typing-dot"></span>
                                     <span className="typing-dot"></span>
                                 </div>
                             </div>
                         )}
+                        <div ref={messagesEndRef} />
                     </>
                 )}
-                <div ref={messagesEndRef} />
             </div>
 
             <div className="message-input-area">
                 {selectedFile && (
-                    <div className="file-preview-bar animate-slide-up">
-                        <div className="preview-content">
-                            {filePreview ? (
-                                <img src={filePreview} alt="preview" className="img-preview" />
-                            ) : (
-                                <div className="doc-preview">
-                                    <HiPaperClip />
-                                    <span>{selectedFile.name}</span>
-                                </div>
-                            )}
-                            <button className="clear-file-btn" onClick={clearFile}>
-                                <HiXMark />
-                            </button>
-                        </div>
+                    <div className="file-preview-bar animate-up" style={{ marginBottom: "16px", borderRadius: "16px", background: "rgba(255,255,255,0.05)", padding: "12px", display: "flex", alignItems: "center", gap: "10px", position: "relative" }}>
+                        {filePreview ? (
+                            <img src={filePreview} alt="Preview" style={{ width: "50px", height: "50px", borderRadius: "12px", objectFit: "cover" }} />
+                        ) : (
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "white" }}>
+                                <HiDocumentText style={{ fontSize: "24px", color: "var(--secondary-glow)" }} />
+                                <span style={{ fontSize: "14px", fontWeight: "500" }}>{selectedFile?.name}</span>
+                            </div>
+                        )}
+                        <button
+                            className="icon-btn"
+                            onClick={clearFile}
+                            style={{ position: "absolute", top: "-10px", right: "-10px", width: "28px", height: "28px", fontSize: "16px", background: "#ef4444", color: "white" }}
+                        >
+                            <HiXMark />
+                        </button>
                     </div>
                 )}
-                <form className="message-input-wrapper" onSubmit={handleSend}>
-                    <button
-                        type="button"
-                        className="icon-btn attachment-btn"
-                        onClick={() => fileInputRef.current.click()}
-                    >
+                <div className="input-box">
+                    <button className="attach-btn" onClick={() => fileInputRef.current.click()}>
                         <HiPaperClip />
                     </button>
                     <input
@@ -268,24 +230,26 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
                         ref={fileInputRef}
                         onChange={handleFileChange}
                     />
-                    <input
-                        ref={inputRef}
-                        type="text"
-                        className="message-input"
-                        placeholder="Type a message..."
-                        value={newMessage}
-                        onChange={handleTyping}
-                        onKeyDown={handleKeyDown}
-                        disabled={sending}
-                    />
-                    <button
-                        type="submit"
-                        className="send-btn"
-                        disabled={(!newMessage.trim() && !selectedFile) || sending}
+                    <form
+                        onSubmit={handleSend}
+                        style={{ flex: 1, display: "flex", gap: "12px" }}
                     >
-                        {sending ? <div className="small-spinner"></div> : <HiPaperAirplane />}
-                    </button>
-                </form>
+                        <input
+                            type="text"
+                            placeholder="Type your message..."
+                            value={newMessage}
+                            onChange={handleTyping}
+                            disabled={sending}
+                        />
+                        <button
+                            type="submit"
+                            className="send-btn"
+                            disabled={(!newMessage.trim() && !selectedFile) || sending}
+                        >
+                            {sending ? <div className="spinner" style={{ width: "20px", height: "20px" }}></div> : <HiPaperAirplane />}
+                        </button>
+                    </form>
+                </div>
             </div>
 
             {showGroupInfo && selectedChat?.isGroupChat && (
