@@ -110,13 +110,13 @@ const ChatSidebar = ({ className = "", onSelectChat, showSidebarMobile }) => {
                         <h2>Vartalap</h2>
                     </div>
                     <div className="sidebar-actions">
-                        <button className="icon-btn" title="Toggle Theme" onClick={toggleTheme}>
+                        <button className="icon-btn" title="Toggle Theme" aria-label="Toggle dark/light theme" onClick={toggleTheme}>
                             {theme === "dark" ? <HiSun /> : <HiMoon />}
                         </button>
-                        <button className="icon-btn" title="New Chat" onClick={() => setShowSearch(true)}>
+                        <button className="icon-btn" title="New Chat" aria-label="Start a new conversation" onClick={() => setShowSearch(true)}>
                             <HiPlus />
                         </button>
-                        <button className="icon-btn" title="New Group" onClick={() => setShowGroupModal(true)}>
+                        <button className="icon-btn" title="New Group" aria-label="Create a new group sanctuary" onClick={() => setShowGroupModal(true)}>
                             <HiUserGroup />
                         </button>
                     </div>
@@ -193,11 +193,10 @@ const ChatSidebar = ({ className = "", onSelectChat, showSidebarMobile }) => {
 
                 <div className="sidebar-user">
                     <div
-                        className="avatar"
-                        style={{ cursor: "pointer", width: "42px", height: "42px", marginRight: "0" }}
+                        className="avatar sidebar-user-avatar"
                         onClick={() => navigate("/profile")}
                     >
-                        <div className="avatar-wrapper" style={{ width: "100%", height: "100%" }}>
+                        <div className="avatar-wrapper">
                             {user?.avatar ? (
                                 <img src={user.avatar} alt="" className="avatar-img" />
                             ) : (
@@ -207,11 +206,11 @@ const ChatSidebar = ({ className = "", onSelectChat, showSidebarMobile }) => {
                             )}
                         </div>
                     </div>
-                    <div className="sidebar-user-info" style={{ cursor: "pointer" }} onClick={() => navigate("/profile")}>
+                    <div className="sidebar-user-info" onClick={() => navigate("/profile")} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && navigate("/profile")}>
                         <div className="name">{user?.name}</div>
                         <div className="email">{user?.email}</div>
                     </div>
-                    <button className="logout-btn" title="Logout" onClick={logout}>
+                    <button className="logout-btn" title="Logout" aria-label="Logout of Vartalap" onClick={logout}>
                         <HiArrowRightOnRectangle />
                     </button>
                 </div>

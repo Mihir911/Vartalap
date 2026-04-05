@@ -45,9 +45,9 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
 
     const getChatTitle = () => {
         if (!selectedChat) return "";
-        if (selectedChat.isGroupChat) return selectedChat.chatName || "Group";
+        if (selectedChat.isGroupChat) return selectedChat.chatName || "Group Chat";
         const otherUser = getOtherUser();
-        return otherUser ? otherUser.name : "Unknown";
+        return otherUser ? otherUser.name : "Unknown Spirit";
     };
 
     const handleTyping = (e) => {
@@ -133,19 +133,19 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
     if (!selectedChat) return null;
 
     return (
-        <div className="chat-window-content" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div className="chat-window-content">
             <header className="chat-header">
                 <div className="chat-header-info">
-                    <button className="icon-btn back-btn" onClick={onBack}>
+                    <button className="icon-btn back-btn" onClick={onBack} aria-label="Go back to list">
                         <HiArrowLeft />
                     </button>
                     <div className="avatar" style={{ cursor: selectedChat.isGroupChat ? "pointer" : "default" }} onClick={() => selectedChat.isGroupChat && setShowGroupInfo(true)}>
-                        <div className="avatar-wrapper" style={{ width: "48px", height: "48px" }}>
+                        <div className="avatar-wrapper">
                             {otherUser?.avatar ? (
                                 <img src={otherUser.avatar} alt="" className="avatar-img" />
                             ) : (
                                 <div className="avatar-placeholder">
-                                    {selectedChat.isGroupChat ? <HiUserGroup style={{ fontSize: "24px" }} /> : getInitials(getChatTitle())}
+                                    {selectedChat.isGroupChat ? <HiUserGroup className="group-avatar-icon" /> : getInitials(getChatTitle())}
                                 </div>
                             )}
                             {isUserOnline(selectedChat) && <span className="online-badge"></span>}
@@ -161,13 +161,13 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
                     </div>
                 </div>
                 <div className="chat-header-actions">
-                    <button className="icon-btn" title="Phone Call">
+                    <button className="icon-btn" title="Phone Call" aria-label="Start Voice Call">
                         <HiPhone />
                     </button>
-                    <button className="icon-btn" title="Video Call">
+                    <button className="icon-btn" title="Video Call" aria-label="Start Video Call">
                         <HiVideoCamera />
                     </button>
-                    <button className="icon-btn" title="Information" onClick={() => selectedChat.isGroupChat && setShowGroupInfo(true)}>
+                    <button className="icon-btn" title="Information" aria-label="Show chat details" onClick={() => selectedChat.isGroupChat && setShowGroupInfo(true)}>
                         <HiInformationCircle />
                     </button>
                 </div>
@@ -175,7 +175,7 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
 
             <div className="messages-container">
                 {loadingMessages ? (
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                    <div className="chat-loading-spinner">
                         <div className="spinner"></div>
                     </div>
                 ) : (
@@ -189,8 +189,8 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
                             />
                         ))}
                         {typing && (
-                            <div className="message-wrapper received" style={{ padding: "10px 0" }}>
-                                <div className="typing-indicator" style={{ background: "rgba(255,255,255,0.05)", padding: "12px 20px", borderRadius: "18px" }}>
+                            <div className="message-wrapper received typing-wrapper">
+                                <div className="typing-indicator-bubble">
                                     <span className="typing-dot"></span>
                                     <span className="typing-dot"></span>
                                     <span className="typing-dot"></span>
@@ -204,26 +204,26 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
 
             <div className="message-input-area">
                 {selectedFile && (
-                    <div className="file-preview-bar animate-up" style={{ marginBottom: "16px", borderRadius: "16px", background: "rgba(255,255,255,0.05)", padding: "12px", display: "flex", alignItems: "center", gap: "10px", position: "relative" }}>
+                    <div className="file-preview-bar animate-up">
                         {filePreview ? (
-                            <img src={filePreview} alt="Preview" style={{ width: "50px", height: "50px", borderRadius: "12px", objectFit: "cover" }} />
+                            <img src={filePreview} alt="Preview" className="img-preview-thumb" />
                         ) : (
-                            <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "white" }}>
-                                <HiDocument style={{ fontSize: "24px", color: "var(--secondary-glow)" }} />
-                                <span style={{ fontSize: "14px", fontWeight: "500" }}>{selectedFile?.name}</span>
+                            <div className="doc-preview-thumb">
+                                <HiDocument />
+                                <span>{selectedFile?.name}</span>
                             </div>
                         )}
                         <button
-                            className="icon-btn"
+                            className="icon-btn clear-preview-btn"
                             onClick={clearFile}
-                            style={{ position: "absolute", top: "-10px", right: "-10px", width: "28px", height: "28px", fontSize: "16px", background: "#ef4444", color: "white" }}
+                            aria-label="Remove attachment"
                         >
                             <HiXMark />
                         </button>
                     </div>
                 )}
                 <div className="input-box">
-                    <button className="attach-btn" onClick={() => fileInputRef.current.click()}>
+                    <button className="attach-btn" onClick={() => fileInputRef.current.click()} aria-label="Attach file">
                         <HiPaperClip />
                     </button>
                     <input
@@ -234,22 +234,24 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
                     />
                     <form
                         onSubmit={handleSend}
-                        style={{ flex: 1, display: "flex", gap: "12px" }}
+                        className="message-send-form"
                     >
                         <input
                             type="text"
-                            placeholder="Type your message..."
+                            placeholder="Type a message..."
                             value={newMessage}
                             onChange={handleTyping}
                             disabled={sending}
                             ref={inputRef}
+                            aria-label="Message content"
                         />
                         <button
                             type="submit"
                             className="send-btn"
                             disabled={(!newMessage.trim() && !selectedFile) || sending}
+                            aria-label="Send message"
                         >
-                            {sending ? <div className="spinner" style={{ width: "20px", height: "20px" }}></div> : <HiPaperAirplane />}
+                            {sending ? <div className="spinner small-spinner"></div> : <HiPaperAirplane />}
                         </button>
                     </form>
                 </div>

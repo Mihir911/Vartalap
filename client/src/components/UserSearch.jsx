@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { HiXMark, HiMagnifyingGlass, HiUser } from "react-icons/hi2";
+import { HiXMark, HiMagnifyingGlass } from "react-icons/hi2";
 import API from "../config/api.js";
 import useChatStore from "../store/useChatStore.js";
 import toast from "react-hot-toast";
@@ -47,29 +47,29 @@ const UserSearch = ({ onClose }) => {
 
     return (
         <>
-            <div className="drawer-overlay" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={onClose}></div>
-            <div className="search-drawer glass-container animate-up" style={{
+            <div className="drawer-overlay" onClick={onClose}></div>
+            <div className="search-drawer animate-up" style={{
                 position: 'fixed',
                 top: '50%',
                 left: '50%',
                 transform: 'translate(-50%, -50%)',
-                width: '450px',
+                width: '100%',
+                maxWidth: '450px',
                 maxHeight: '600px',
-                borderRadius: '24px',
+                borderRadius: '32px',
                 zIndex: 100,
                 display: 'flex',
                 flexDirection: 'column',
-                overflow: 'hidden',
-                boxShadow: 'var(--shadow-lg)'
+                overflow: 'hidden'
             }}>
-                <div className="drawer-header" style={{ padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-glass)' }}>
-                    <h3>Start a New Convo</h3>
-                    <button className="icon-btn" onClick={onClose}>
+                <div className="drawer-header" style={{ padding: '24px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-glass)' }}>
+                    <h3 style={{ fontSize: '20px', fontWeight: '800' }}>Start a New Convo</h3>
+                    <button className="icon-btn" onClick={onClose} aria-label="Close search">
                         <HiXMark />
                     </button>
                 </div>
 
-                <div className="sidebar-search" style={{ padding: '20px' }}>
+                <div className="sidebar-search" style={{ padding: '24px 32px 16px' }}>
                     <div className="search-input-wrapper">
                         <HiMagnifyingGlass className="search-icon" />
                         <input
@@ -79,11 +79,12 @@ const UserSearch = ({ onClose }) => {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             autoFocus
+                            aria-label="Search users"
                         />
                     </div>
                 </div>
 
-                <div className="search-results" style={{ flex: 1, overflowY: 'auto', padding: '0 10px 20px' }}>
+                <div className="search-results" style={{ flex: 1, overflowY: 'auto', padding: '0 16px 24px' }}>
                     {loading ? (
                         <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
                             <div className="spinner"></div>
@@ -93,29 +94,38 @@ const UserSearch = ({ onClose }) => {
                             <p>No spirits found with that name.</p>
                         </div>
                     ) : (
-                        results.map((u) => (
-                            <div
-                                key={u._id}
-                                className="chat-item"
-                                onClick={() => handleAccessChat(u._id)}
-                            >
-                                <div className="avatar">
-                                    <div className="avatar-wrapper" style={{ width: '48px', height: '48px' }}>
-                                        {u.avatar ? (
-                                            <img src={u.avatar} alt="" className="avatar-img" />
-                                        ) : (
-                                            <div className="avatar-placeholder">
-                                                {getInitials(u.name)}
-                                            </div>
-                                        )}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            {results.map((u) => (
+                                <div
+                                    key={u._id}
+                                    className="chat-item"
+                                    onClick={() => handleAccessChat(u._id)}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleAccessChat(u._id)}
+                                >
+                                    <div className="avatar">
+                                        <div className="avatar-wrapper" style={{ width: '48px', height: '48px' }}>
+                                            {u.avatar ? (
+                                                <img src={u.avatar} alt="" className="avatar-img" />
+                                            ) : (
+                                                <div className="avatar-placeholder">
+                                                    {getInitials(u.name)}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="chat-item-info">
+                                        <div className="chat-item-name">
+                                            <span>{u.name}</span>
+                                        </div>
+                                        <div className="chat-item-preview">
+                                            <span>{u.email}</span>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="chat-info">
-                                    <div className="chat-name">{u.name}</div>
-                                    <div className="chat-preview">{u.email}</div>
-                                </div>
-                            </div>
-                        ))
+                            ))}
+                        </div>
                     )}
                 </div>
             </div>
