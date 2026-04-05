@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import API from "../config/api.js";
 
-const useAuthStore = create((set) => ({
+const useAuthStore = create((set, get) => ({
     user: JSON.parse(localStorage.getItem("vartalap-user")) || null,
 
     login: async (email, password) => {
@@ -23,9 +23,9 @@ const useAuthStore = create((set) => ({
         set({ user: null });
     },
 
-    updateProfile: (updatedUser) => {
-        const current = get().user;
-        const merged = { ...current, ...updatedUser };
+    updateProfile: (updatedData) => {
+        const { user } = get();
+        const merged = { ...user, ...updatedData };
         localStorage.setItem("vartalap-user", JSON.stringify(merged));
         set({ user: merged });
     },
