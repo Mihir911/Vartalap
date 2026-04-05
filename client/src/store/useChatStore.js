@@ -52,9 +52,20 @@ const useChatStore = create((set, get) => ({
         }
     },
 
-    sendMessage: async (content, chatId) => {
+    sendMessage: async ({ content, chatId, file }) => {
         try {
-            const { data } = await API.post("/messages", { content, chatId });
+            let res;
+            if (file) {
+                const formData = new FormData();
+                if (content) formData.append("content", content);
+                formData.append("chatId", chatId);
+                formData.append("file", file);
+                res = await API.post("/messages", formData);
+            } else {
+                res = await API.post("/messages", { content, chatId });
+            }
+
+            const { data } = res;
             set((state) => ({ messages: [...state.messages, data] }));
             // Update latest message in chat list
             set((state) => ({

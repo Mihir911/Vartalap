@@ -10,6 +10,8 @@ const userSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
+        bio: { type: String, default: "" },
+        gender: { type: String, enum: ["Male", "Female", "Other", "Prefer not to say", ""], default: "" },
         isOnline: { type: Boolean, default: false },
     },
     { timestamps: true }

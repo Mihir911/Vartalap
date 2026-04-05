@@ -2,16 +2,19 @@ import { useState, useCallback } from "react";
 import { HiMagnifyingGlass, HiUserGroup, HiArrowRightOnRectangle, HiPlus } from "react-icons/hi2";
 import useAuthStore from "../store/useAuthStore.js";
 import useChatStore from "../store/useChatStore.js";
+import useThemeStore from "../store/useThemeStore.js";
 import UserSearch from "./UserSearch.jsx";
 import GroupModal from "./GroupModal.jsx";
-import ProfileModal from "./ProfileModal.jsx";
+import { useNavigate } from "react-router-dom";
+import { HiMoon, HiSun } from "react-icons/hi2";
 
 const ChatSidebar = ({ className = "", onSelectChat }) => {
     const { user, logout } = useAuthStore();
     const { chats, selectedChat, setSelectedChat, notifications, removeNotification, onlineUsers } = useChatStore();
+    const { theme, toggleTheme } = useThemeStore();
+    const navigate = useNavigate();
     const [showSearch, setShowSearch] = useState(false);
     const [showGroupModal, setShowGroupModal] = useState(false);
-    const [showProfile, setShowProfile] = useState(false);
     const [filterText, setFilterText] = useState("");
 
     const getOtherUser = useCallback(
@@ -109,6 +112,9 @@ const ChatSidebar = ({ className = "", onSelectChat }) => {
                         <h2>Vartalap</h2>
                     </div>
                     <div className="sidebar-actions">
+                        <button className="icon-btn" title="Toggle Theme" onClick={toggleTheme}>
+                            {theme === "dark" ? <HiSun /> : <HiMoon />}
+                        </button>
                         <button className="icon-btn" title="New Chat" onClick={() => setShowSearch(true)}>
                             <HiPlus />
                         </button>
@@ -188,7 +194,7 @@ const ChatSidebar = ({ className = "", onSelectChat }) => {
                 <div className="sidebar-user">
                     <div
                         style={{ cursor: "pointer" }}
-                        onClick={() => setShowProfile(true)}
+                        onClick={() => navigate("/profile")}
                     >
                         {user?.avatar ? (
                             <img src={user.avatar} alt="" className="avatar-img" style={{ width: "36px", height: "36px" }} />
@@ -198,7 +204,7 @@ const ChatSidebar = ({ className = "", onSelectChat }) => {
                             </div>
                         )}
                     </div>
-                    <div className="sidebar-user-info" style={{ cursor: "pointer" }} onClick={() => setShowProfile(true)}>
+                    <div className="sidebar-user-info" style={{ cursor: "pointer" }} onClick={() => navigate("/profile")}>
                         <div className="name">{user?.name}</div>
                         <div className="email">{user?.email}</div>
                     </div>
@@ -210,7 +216,6 @@ const ChatSidebar = ({ className = "", onSelectChat }) => {
 
             {showSearch && <UserSearch onClose={() => setShowSearch(false)} />}
             {showGroupModal && <GroupModal onClose={() => setShowGroupModal(false)} />}
-            {showProfile && <ProfileModal user={user} onClose={() => setShowProfile(false)} />}
         </>
     );
 };

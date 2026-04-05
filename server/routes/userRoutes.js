@@ -32,6 +32,8 @@ router.post("/register", async (req, res) => {
             name: user.name,
             email: user.email,
             avatar: user.avatar,
+            bio: user.bio,
+            gender: user.gender,
             token: generateToken(user._id),
         });
     } catch (error) {
@@ -52,6 +54,8 @@ router.post("/login", async (req, res) => {
                 name: user.name,
                 email: user.email,
                 avatar: user.avatar,
+                bio: user.bio,
+                gender: user.gender,
                 token: generateToken(user._id),
             });
         } else {
@@ -95,6 +99,8 @@ router.put("/profile", protect, upload.single("avatar"), async (req, res) => {
         }
 
         if (req.body.name) user.name = req.body.name;
+        if (req.body.bio !== undefined) user.bio = req.body.bio;
+        if (req.body.gender !== undefined) user.gender = req.body.gender;
 
         if (req.file) {
             try {
@@ -120,6 +126,8 @@ router.put("/profile", protect, upload.single("avatar"), async (req, res) => {
             name: updatedUser.name,
             email: updatedUser.email,
             avatar: updatedUser.avatar,
+            bio: updatedUser.bio,
+            gender: updatedUser.gender,
         });
     } catch (error) {
         res.status(500).json({ message: error.message });

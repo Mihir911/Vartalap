@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { HiPaperAirplane, HiPhoto, HiArrowLeft, HiEllipsisVertical, HiInformationCircle } from "react-icons/hi2";
+import { HiPaperAirplane, HiPhoto, HiArrowLeft, HiEllipsisVertical, HiInformationCircle, HiPaperClip, HiXMark } from "react-icons/hi2";
 import useAuthStore from "../store/useAuthStore.js";
 import useChatStore from "../store/useChatStore.js";
 import { getSocket } from "../config/socket.js";
@@ -12,17 +12,25 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
         useChatStore();
 
     const [newMessage, setNewMessage] = useState("");
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [filePreview, setFilePreview] = useState(null);
     const [isTyping, setIsTyping] = useState(false);
     const [showGroupInfo, setShowGroupInfo] = useState(false);
+    const [sending, setSending] = useState(false);
+
     const messagesEndRef = useRef(null);
     const typingTimeoutRef = useRef(null);
     const inputRef = useRef(null);
+    const fileInputRef = useRef(null);
 
     useEffect(() => {
         if (selectedChat) {
             fetchMessages(selectedChat._id);
             const socket = getSocket();
             socket.emit("join chat", selectedChat._id);
+            // Reset file states when chat changes
+            setSelectedFile(null);
+            setFilePreview(null);
         }
     }, [selectedChat, fetchMessages]);
 
@@ -73,23 +81,52 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
         }, 2000);
     };
 
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setSelectedFile(file);
+            if (file.type.startsWith("image/")) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    setFilePreview(reader.result);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                setFilePreview(null); // No preview for non-images
+            }
+        }
+    };
+
+    const clearFile = () => {
+        setSelectedFile(null);
+        setFilePreview(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+    };
+
     const handleSend = async (e) => {
         e?.preventDefault();
 
-        if (!newMessage.trim()) return;
+        if (!newMessage.trim() && !selectedFile) return;
 
         const socket = getSocket();
         socket.emit("stop typing", selectedChat._id);
         setIsTyping(false);
 
         const content = newMessage;
+        const file = selectedFile;
+
         setNewMessage("");
+        clearFile();
+        setSending(true);
 
         try {
-            const data = await sendMessage(content, selectedChat._id);
+            const data = await sendMessage({ content, chatId: selectedChat._id, file });
             socket.emit("new message", data);
         } catch (err) {
             setNewMessage(content);
+            setSelectedFile(file);
+        } finally {
+            setSending(false);
         }
 
         inputRef.current?.focus();
@@ -122,7 +159,7 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
     const otherUser = getOtherUser();
 
     return (
-        <>
+        <div className="chat-window-container">
             <div className="chat-header">
                 <div className="chat-header-info">
                     <button className="icon-btn back-btn" onClick={onBack}>
@@ -179,7 +216,7 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
                                 <MessageBubble
                                     key={item.id}
                                     message={item.data}
-                                    isOwn={item.data.sender._id === user._id}
+                                    isOwn={item.data.sender._id === user._id || item.data.sender === user._id}
                                     showSender={selectedChat?.isGroupChat}
                                 />
                             );
@@ -200,7 +237,37 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
             </div>
 
             <div className="message-input-area">
+                {selectedFile && (
+                    <div className="file-preview-bar animate-slide-up">
+                        <div className="preview-content">
+                            {filePreview ? (
+                                <img src={filePreview} alt="preview" className="img-preview" />
+                            ) : (
+                                <div className="doc-preview">
+                                    <HiPaperClip />
+                                    <span>{selectedFile.name}</span>
+                                </div>
+                            )}
+                            <button className="clear-file-btn" onClick={clearFile}>
+                                <HiXMark />
+                            </button>
+                        </div>
+                    </div>
+                )}
                 <form className="message-input-wrapper" onSubmit={handleSend}>
+                    <button
+                        type="button"
+                        className="icon-btn attachment-btn"
+                        onClick={() => fileInputRef.current.click()}
+                    >
+                        <HiPaperClip />
+                    </button>
+                    <input
+                        type="file"
+                        hidden
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                    />
                     <input
                         ref={inputRef}
                         type="text"
@@ -209,13 +276,14 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
                         value={newMessage}
                         onChange={handleTyping}
                         onKeyDown={handleKeyDown}
+                        disabled={sending}
                     />
                     <button
                         type="submit"
                         className="send-btn"
-                        disabled={!newMessage.trim()}
+                        disabled={(!newMessage.trim() && !selectedFile) || sending}
                     >
-                        <HiPaperAirplane />
+                        {sending ? <div className="small-spinner"></div> : <HiPaperAirplane />}
                     </button>
                 </form>
             </div>
@@ -223,7 +291,7 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
             {showGroupInfo && selectedChat?.isGroupChat && (
                 <GroupInfoModal chat={selectedChat} onClose={() => setShowGroupInfo(false)} />
             )}
-        </>
+        </div>
     );
 };
 

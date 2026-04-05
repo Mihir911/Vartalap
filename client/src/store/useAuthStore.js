@@ -24,7 +24,7 @@ const useAuthStore = create((set) => ({
     },
 
     updateProfile: (updatedUser) => {
-        const current = JSON.parse(localStorage.getItem("vartalap-user"));
+        const current = get().user;
         const merged = { ...current, ...updatedUser };
         localStorage.setItem("vartalap-user", JSON.stringify(merged));
         set({ user: merged });
