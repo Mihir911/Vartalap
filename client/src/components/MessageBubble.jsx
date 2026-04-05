@@ -1,7 +1,10 @@
 import { HiDocumentArrowDown, HiPlay, HiMicrophone, HiCheck, HiCheckBadge } from "react-icons/hi2";
 
 const MessageBubble = ({ message, isSent, showSender }) => {
+    if (!message) return null;
+
     const formatTime = (dateStr) => {
+        if (!dateStr) return "";
         const date = new Date(dateStr);
         return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     };
@@ -20,7 +23,7 @@ const MessageBubble = ({ message, isSent, showSender }) => {
                         src={url}
                         alt="shared"
                         className="message-image"
-                        style={{ borderRadius: '12px', cursor: 'pointer' }}
+                        style={{ borderRadius: '12px', cursor: 'pointer', maxWidth: '100%', display: 'block' }}
                         onClick={() => window.open(url, "_blank")}
                     />
                 </div>
@@ -47,7 +50,7 @@ const MessageBubble = ({ message, isSent, showSender }) => {
                         <HiDocumentArrowDown className="file-icon" />}
                 <div className="file-info">
                     <span className="file-name" style={{ fontSize: '13px', fontWeight: '600' }}>
-                        {type.charAt(0).toUpperCase() + type.slice(1)} File
+                        {type ? type.charAt(0).toUpperCase() + type.slice(1) : "File"}
                     </span>
                     <span className="file-size" style={{ fontSize: '11px', opacity: 0.7 }}>Click to view</span>
                 </div>
@@ -56,20 +59,21 @@ const MessageBubble = ({ message, isSent, showSender }) => {
     };
 
     const isRead = message.readBy && message.readBy.length > 1;
+    const senderName = message.sender?.name || "Unknown Spirit";
 
     return (
         <div className={`message-wrapper ${isSent ? "sent" : "received"}`}>
             <div className={`message-bubble animate-scale-in ${isSent ? "message-sent" : "message-received"}`}>
                 {showSender && !isSent && (
                     <div className="message-sender" style={{ fontSize: '12px', fontWeight: '700', color: 'var(--secondary-glow)', marginBottom: '4px' }}>
-                        {message.sender.name}
+                        {senderName}
                     </div>
                 )}
 
                 {renderFile()}
 
                 {message.content && (
-                    <div className="message-content" style={{ fontSize: '15px', lineHeight: '1.5' }}>
+                    <div className="message-content" style={{ fontSize: '15px', lineHeight: '1.5', wordBreak: 'break-word' }}>
                         {message.content}
                     </div>
                 )}

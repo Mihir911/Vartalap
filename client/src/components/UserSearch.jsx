@@ -63,7 +63,7 @@ const UserSearch = ({ onClose }) => {
                 boxShadow: 'var(--shadow-lg)'
             }}>
                 <div className="drawer-header" style={{ padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-glass)' }}>
-                    <h3>Start a new journey</h3>
+                    <h3>Start a New Convo</h3>
                     <button className="icon-btn" onClick={onClose}>
                         <HiXMark />
                     </button>

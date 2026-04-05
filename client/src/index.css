@@ -613,6 +613,42 @@ body {
   }
 }
 
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-up {
+  animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
 /* Mobile Fixes */
 @media (max-width: 768px) {
   .chat-page {
@@ -623,10 +659,11 @@ body {
     width: 100%;
     position: absolute;
     height: 100%;
+    z-index: 10;
   }
 
   .chat-sidebar.hidden-mobile {
-    display: none;
+    display: none !important;
   }
 
   .chat-header .back-btn {

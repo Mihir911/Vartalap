@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { HiPaperAirplane, HiArrowLeft, HiInformationCircle, HiPaperClip, HiXMark, HiPhone, HiVideoCamera, HiUserGroup, HiDocumentText } from "react-icons/hi2";
+import { HiPaperAirplane, HiArrowLeft, HiInformationCircle, HiPaperClip, HiXMark, HiPhone, HiVideoCamera, HiUserGroup, HiDocument } from "react-icons/hi2";
 import useAuthStore from "../store/useAuthStore.js";
 import useChatStore from "../store/useChatStore.js";
 import { getSocket } from "../config/socket.js";
@@ -24,28 +24,28 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
     const fileInputRef = useRef(null);
 
     useEffect(() => {
-        if (selectedChat) {
+        if (selectedChat?._id) {
             fetchMessages(selectedChat._id);
             const socket = getSocket();
             socket.emit("join chat", selectedChat._id);
             setSelectedFile(null);
             setFilePreview(null);
         }
-    }, [selectedChat, fetchMessages]);
+    }, [selectedChat?._id, fetchMessages]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages, typing]);
 
     const getOtherUser = useCallback(() => {
-        if (!selectedChat || !user) return null;
+        if (!selectedChat?.users || !user) return null;
         if (selectedChat.isGroupChat) return null;
         return selectedChat.users.find((u) => u._id !== user._id);
     }, [selectedChat, user]);
 
     const getChatTitle = () => {
         if (!selectedChat) return "";
-        if (selectedChat.isGroupChat) return selectedChat.chatName;
+        if (selectedChat.isGroupChat) return selectedChat.chatName || "Group";
         const otherUser = getOtherUser();
         return otherUser ? otherUser.name : "Unknown";
     };
@@ -53,7 +53,7 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
     const handleTyping = (e) => {
         setNewMessage(e.target.value);
 
-        if (!socketConnected) return;
+        if (!socketConnected || !selectedChat?._id) return;
         const socket = getSocket();
 
         if (!isTyping) {
@@ -92,7 +92,7 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
 
     const handleSend = async (e) => {
         e?.preventDefault();
-        if (!newMessage.trim() && !selectedFile) return;
+        if ((!newMessage.trim() && !selectedFile) || !selectedChat?._id) return;
 
         const socket = getSocket();
         socket.emit("stop typing", selectedChat._id);
@@ -123,27 +123,29 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
     };
 
     const isUserOnline = (chat) => {
-        if (!chat || chat.isGroupChat) return false;
+        if (!chat?.users || chat.isGroupChat || !user) return false;
         const otherUser = chat.users.find((u) => u._id !== user._id);
         return otherUser ? onlineUsers.includes(otherUser._id) : false;
     };
 
     const otherUser = getOtherUser();
 
+    if (!selectedChat) return null;
+
     return (
-        <div className="chat-main">
+        <div className="chat-window-content" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             <header className="chat-header">
                 <div className="chat-header-info">
                     <button className="icon-btn back-btn" onClick={onBack}>
                         <HiArrowLeft />
                     </button>
-                    <div className="avatar" style={{ cursor: selectedChat?.isGroupChat ? "pointer" : "default" }} onClick={() => selectedChat?.isGroupChat && setShowGroupInfo(true)}>
+                    <div className="avatar" style={{ cursor: selectedChat.isGroupChat ? "pointer" : "default" }} onClick={() => selectedChat.isGroupChat && setShowGroupInfo(true)}>
                         <div className="avatar-wrapper" style={{ width: "48px", height: "48px" }}>
                             {otherUser?.avatar ? (
                                 <img src={otherUser.avatar} alt="" className="avatar-img" />
                             ) : (
                                 <div className="avatar-placeholder">
-                                    {selectedChat?.isGroupChat ? <HiUserGroup style={{ fontSize: "24px" }} /> : getInitials(getChatTitle())}
+                                    {selectedChat.isGroupChat ? <HiUserGroup style={{ fontSize: "24px" }} /> : getInitials(getChatTitle())}
                                 </div>
                             )}
                             {isUserOnline(selectedChat) && <span className="online-badge"></span>}
@@ -154,7 +156,7 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
                         {typing ? (
                             <p className="typing-text">typing...</p>
                         ) : (
-                            <p>{selectedChat?.isGroupChat ? `${selectedChat.users?.length} members` : isUserOnline(selectedChat) ? "Online" : "Offline"}</p>
+                            <p>{selectedChat.isGroupChat ? `${selectedChat.users?.length || 0} members` : isUserOnline(selectedChat) ? "Online" : "Offline"}</p>
                         )}
                     </div>
                 </div>
@@ -165,7 +167,7 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
                     <button className="icon-btn" title="Video Call">
                         <HiVideoCamera />
                     </button>
-                    <button className="icon-btn" title="Information" onClick={() => selectedChat?.isGroupChat && setShowGroupInfo(true)}>
+                    <button className="icon-btn" title="Information" onClick={() => selectedChat.isGroupChat && setShowGroupInfo(true)}>
                         <HiInformationCircle />
                     </button>
                 </div>
@@ -178,11 +180,11 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
                     </div>
                 ) : (
                     <>
-                        {messages.map((m, index) => (
+                        {messages && messages.map((m, index) => (
                             <MessageBubble
                                 key={m._id}
                                 message={m}
-                                isSent={m.sender._id === user._id || m.sender === user._id}
+                                isSent={m.sender?._id === user?._id || m.sender === user?._id}
                                 isLastMessage={index === messages.length - 1}
                             />
                         ))}
@@ -207,7 +209,7 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
                             <img src={filePreview} alt="Preview" style={{ width: "50px", height: "50px", borderRadius: "12px", objectFit: "cover" }} />
                         ) : (
                             <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "white" }}>
-                                <HiDocumentText style={{ fontSize: "24px", color: "var(--secondary-glow)" }} />
+                                <HiDocument style={{ fontSize: "24px", color: "var(--secondary-glow)" }} />
                                 <span style={{ fontSize: "14px", fontWeight: "500" }}>{selectedFile?.name}</span>
                             </div>
                         )}
@@ -240,6 +242,7 @@ const ChatWindow = ({ typing, socketConnected, onBack }) => {
                             value={newMessage}
                             onChange={handleTyping}
                             disabled={sending}
+                            ref={inputRef}
                         />
                         <button
                             type="submit"

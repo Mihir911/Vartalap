@@ -94,6 +94,7 @@ const ChatPage = () => {
             <ChatSidebar
                 className={selectedChat && !showSidebarMobile ? "hidden-mobile" : ""}
                 onSelectChat={handleSelectChat}
+                showSidebarMobile={showSidebarMobile}
             />
             <div className="chat-main">
                 {selectedChat ? (

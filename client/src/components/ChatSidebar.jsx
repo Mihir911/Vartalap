@@ -8,7 +8,7 @@ import GroupModal from "./GroupModal.jsx";
 import { useNavigate } from "react-router-dom";
 import { HiMoon, HiSun } from "react-icons/hi2";
 
-const ChatSidebar = ({ className = "", onSelectChat }) => {
+const ChatSidebar = ({ className = "", onSelectChat, showSidebarMobile }) => {
     const { user, logout } = useAuthStore();
     const { chats, selectedChat, setSelectedChat, notifications, removeNotification, onlineUsers } = useChatStore();
     const { theme, toggleTheme } = useThemeStore();
